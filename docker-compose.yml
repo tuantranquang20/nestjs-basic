@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nestjs-basic-api
+    container_name: nestjs-basic-api
+    environment:
+      MONGODB_URL: ${MONGODB_URL}
+      MONGO_INITDB_DATABASE: nestjsdb
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - '3000:3000'
+    networks:
+      - app-network
+    links:
+      - db:db
+    depends_on:
+      - db
+    volumes:
+      - .:/nest
+      - /nest/node_modules
+  
+  db:
+    image: mongo
+    container_name: nestjs-basic-db
+    networks:
+      - app-network
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./server:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      MONGO_INITDB_DATABASE: nestjsdb
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+
+networks:
+  app-network:
+    driver: bridge
+

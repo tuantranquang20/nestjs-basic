@@ -1,38 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectModel(UserEntity.name) private readonly userModel: Model<UserEntity>,
+  ) {}
+
+  async create(createUserDto: CreateUserDto) {
+    try {
+      const newUser = new this.userModel({ ...createUserDto });
+      await newUser.save();
+      return newUser;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
-  findAll() {
-    return {
-      code: 200,
-      message: 'success',
-      data: [
-        {
-          userId: 1,
-          name: 'Grey',
-          email: 'grey@gmail.com',
-          gender: 'male',
-        },
-        {
-          userId: 2,
-          name: 'Dev',
-          email: 'dev@gmail.com',
-          gender: 'male',
-        },
-        {
-          userId: 3,
-          name: 'Dev.Grey',
-          email: 'dev.grey@gmail.com',
-          gender: 'male',
-        },
-      ],
-    };
+  async findAll() {
+    try {
+      const users = await this.userModel.find();
+      return users;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async checkIfExist(field = 'id', value = '') {
+    try {
+      const isExist = await this.userModel.findOne({
+        [field]: value,
+      });
+      return isExist;
+    } catch (error) {
+      throw error;
+    }
   }
 
   findOne(id: number) {

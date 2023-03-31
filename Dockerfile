@@ -1,4 +1,4 @@
-FROM node:14-alpine AS BUILD_IMAGE
+FROM node:14-alpine
 
 WORKDIR /nest
 
