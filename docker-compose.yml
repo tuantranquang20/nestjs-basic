@@ -1,45 +1,68 @@
+# Phiên bản của docker-compose file
 version: '3.8'
 
+# Định nghĩa 2 service là api cho backend và db cho database
 services:
   api:
+    # Service backend được build từ chính thư mục hiện tại qua Dockerfile
     build:
       context: .
       dockerfile: Dockerfile
     image: nestjs-basic-api
+
+    # Đặt tên cho container
     container_name: nestjs-basic-api
-    environment:
-      MONGODB_URL: ${MONGODB_URL}
-      MONGO_INITDB_DATABASE: nestjsdb
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin
+
+    # Container sẽ luôn được khởi động lại khi nó thoát
+    restart: always
+
+    # Ánh xạ cổng từ container ra máy host
     ports:
-      - '3000:3000'
+      - '${APP_PORT}:${APP_PORT}'
+
+    # Container này nằm trong mạng có tên app-network
     networks:
       - app-network
+
+    # Kết nối container này với container db
     links:
       - db:db
+
+    # Container này sẽ được khởi tạo sau khi container database khởi tạo xong
+    # Nếu không có thuộc tính này thì cả 2 container được khởi tạo cùng lúc 
     depends_on:
       - db
+
+    # Các biến môi trường truyền vào trong container
+    environment:
+      MONGODB_URL: ${MONGODB_URL}
+
+    # Ánh xạ thư mục chứa code vào trong container để khi thay đổi code bên ngoài thì bên trong cũng thay đổi
     volumes:
       - .:/nest
-      - /nest/node_modules
-  
+
   db:
+    # Service này sử dụng image mongo để chạy
     image: mongo
+
+    # Đặt tên cho container
     container_name: nestjs-basic-db
+    restart: always
     networks:
       - app-network
     ports:
-      - '27017:27017'
+      - '${DB_PORT}:27017'
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
       - ./server:/data/db
+
+      # File mongo-init.js trên máy host được copy vào container với tên là mongo-init.js trong thư mục /docker-entrypoint-initdb.d và chỉ được đọc ( ro: read only ).
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    environment:
-      MONGO_INITDB_DATABASE: nestjsdb
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin
 
 networks:
   app-network:
+    # Mạng app-network sử dụng driver là bridge ( cho phép các container trong cùng network có thể "nói chuyện" được với nhau thông qua hostname )
     driver: bridge
-

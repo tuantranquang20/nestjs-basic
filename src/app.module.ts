@@ -7,7 +7,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import * as dotenv from 'dotenv';
 dotenv.config();
 const { MONGODB_URL } = process.env;
-
 @Module({
   imports: [MongooseModule.forRoot(MONGODB_URL), UserModule, PostModule],
   controllers: [AppController],
