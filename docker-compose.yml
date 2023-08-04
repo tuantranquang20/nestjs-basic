@@ -37,10 +37,6 @@ services:
     environment:
       MONGODB_URL: ${MONGODB_URL}
 
-    # Ánh xạ thư mục chứa code vào trong container để khi thay đổi code bên ngoài thì bên trong cũng thay đổi
-    volumes:
-      - .:/nest
-
   db:
     # Service này sử dụng image mongo để chạy
     image: mongo
